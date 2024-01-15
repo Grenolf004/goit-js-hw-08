@@ -64,37 +64,47 @@ const images = [
   },
 ];
 
-const list = document.querySelector('.gallery');
-list.addEventListener('click', openModalWindow);
-const markup = images
-    .map(({original,preview,description}) =>`<li class='gallery-item'>
-  <a class='gallery-link' href='${original}'>
+const gallery = document.querySelector('.gallery');
+const imagesMarkup = images
+  .map(({ preview, original, description }) => `
+  <li class="gallery-item">
+  <a class="gallery-link" href="${original}">
     <img
-      class='gallery-image'
-      src='${preview}'
-      data-source='${original}'
-      alt='${description}'
-    />
-  </a>
-</li>`)
-    .join('');
-list.innerHTML = markup;
+      class="gallery-image"
+      src="${preview}" 
+      data-source="${original}" 
+      alt="${description}"
+    >
+    </a>
+  </li>`
+  )
+  .join('');
 
-const modalImage = basicLightbox.create(`<img src=''>`,
-    {
-        onShow: (modalImage) => { window.addEventListener('keydown', closeModalWindow); },
-        onClose: (modalImage) => { window.removeEventListener('keydown', closeModalWindow); },
-    });
+gallery.insertAdjacentHTML('beforeend', imagesMarkup);
+
+gallery.addEventListener('click', (event) => {
+  const target = event.target;
+
+  if (target.classList.contains('gallery-image')) {
+    event.preventDefault();
+
+    const originalImageURL = target.dataset.source;
+    console.log(originalImageURL);
     
-function openModalWindow(e) {
-    e.preventDefault();
-    if (e.target.nodeName !== 'IMG') return;
-    const selectedImageSrc = e.target.dataset.source;
-    modalImage.element().querySelector('IMG').src = selectedImageSrc;
-    modalImage.show();
-  }  
-
-function closeModalWindow(e) {
-    if (e.key === 'Escape'){}
-        modalImage.close(); 
-   }
+    const instance = basicLightbox.create(`
+      <img src="${originalImageURL}" alt="Full-size Image">
+    `, {
+      onShow: () => {
+        document.addEventListener('keydown', closeModal);
+      },
+      onClose: () => {
+        document.removeEventListener('keydown', closeModal);
+      }
+    });
+      function closeModal(event) {
+          if (event.code === 'Escape') instance.close();
+        }
+    
+    instance.show();
+  }
+});
